@@ -10,7 +10,7 @@ services:
       - REDIS_HOST=redis-storage:6379
       - REDIS_PASS=iev8vmki8ESh2herqQpeBikgS328lDafzjzv2is0hDC
     ports:
-      - '6969:8080'
+      - '127.0.0.1:6969:8080'
   redis-storage:
     image: redis:7.0-alpine
     restart: always
