@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  deezer-badge:
+    build:
+      context: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis-storage:6379
+      - REDIS_PASS=iev8vmki8ESh2herqQpeBikgS328lDafzjzv2is0hDC
+    ports:
+      - '6969:8080'
+  redis-storage:
+    image: redis:7.0-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass iev8vmki8ESh2herqQpeBikgS328lDafzjzv2is0hDC
+    volumes:
+      - cache:/data
+volumes:
+  cache:
+    driver: local
