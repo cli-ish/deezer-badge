@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-//go:embed templates/badge.gohtml
+//go:embed templates
 var badgeTemplate embed.FS
 
 //go:embed terms.txt
@@ -47,6 +47,7 @@ func main() {
 	})
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", getIndex)
 	mux.HandleFunc("/auth", getAuth)
 	mux.HandleFunc("/badge/", getBadge)
 	mux.HandleFunc("/terms", getTerms)
@@ -54,6 +55,15 @@ func main() {
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func getIndex(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFS(badgeTemplate, "templates/index.gohtml"))
+	w.Header().Set("Content-Type", "text/html")
+	err := tmpl.Execute(w, struct{}{})
+	if err != nil {
+		http.Error(w, "unable to template index", 500)
 	}
 }
 
@@ -160,6 +170,7 @@ func getAuth(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		// Todo: redirect over html/js to avoid proxy issues
 		http.Redirect(w, r, "badge/"+uidStr, 301)
 		return
 	} else {
