@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"github.com/cli-ish/deezer-badge/internal/routes"
 )
 
