@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/cli-ish/deezer-badge/internal/models"
 	"github.com/redis/go-redis/v9"
 	"net/url"
@@ -47,7 +48,7 @@ func (cda *CustomDeezerApi) GetAccessToken(code string) (string, error) {
 	}
 	token := responseQuery.Get("access_token")
 	if token == "" {
-		return "", err
+		return "", errors.New("invalid token found")
 	}
 	return token, nil
 }
