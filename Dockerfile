@@ -18,5 +18,6 @@ ENV REDIS_PASS="password123456"
 ENV APP_ID="123456"
 ENV APP_SECRET="ffffffffffffffffffffffffffffffff"
 ENV RETURN_URL="https://example.com/auth"
+ENV HTTP_PORT="8080"
 
 ENTRYPOINT ["/srv/deezer-badge/deezer-badge"]
