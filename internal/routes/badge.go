@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/base64"
-	"fmt"
 	"github.com/cli-ish/deezer-badge/internal/models"
 	"github.com/cli-ish/deezer-badge/internal/util"
 	"html/template"
@@ -22,18 +21,13 @@ func (bs *BadgeServer) getBadge(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid uid", 500)
 		return
 	}
-	userId, err := bs.RedisClient.Get(bs.ctx, "uid:"+uidStr).Result()
-	if err != nil {
-		http.Error(w, "redis down", 500)
-		return
-	}
-	accessToken, err := bs.RedisClient.Get(bs.ctx, "user:"+fmt.Sprint(userId)).Result()
+	userId, accessToken, err := bs.Database.GetUserIdAndAccessToken(uidStr)
 	if err != nil {
 		http.Error(w, "redis down", 500)
 		return
 	}
 
-	historyResult, err := bs.DeezerApi.GetUserHistory(userId, accessToken, bs.RedisClient, bs.ctx)
+	historyResult, err := bs.DeezerApi.GetUserHistory(userId, accessToken, &bs.Database)
 	if err != nil {
 		http.Error(w, "invalid history information response", 500)
 		return
@@ -43,7 +37,7 @@ func (bs *BadgeServer) getBadge(w http.ResponseWriter, r *http.Request) {
 		lastPlayedTrack = historyResult.Data[0]
 	}
 	if lastPlayedTrack.Album.CoverMedium != "" && strings.HasPrefix(lastPlayedTrack.Album.CoverMedium, "http") {
-		data, err := util.GetPageContentCached(lastPlayedTrack.Album.CoverMedium, bs.RedisClient, bs.ctx, 30*time.Minute)
+		data, err := util.GetPageContentCached(lastPlayedTrack.Album.CoverMedium, &bs.Database, 30*time.Minute)
 		if err != nil {
 			http.Error(w, "could not be requested", 500)
 			return

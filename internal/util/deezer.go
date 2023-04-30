@@ -1,11 +1,9 @@
 package util
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"github.com/cli-ish/deezer-badge/internal/models"
-	"github.com/redis/go-redis/v9"
 	"net/url"
 	"time"
 )
@@ -53,12 +51,12 @@ func (cda *CustomDeezerApi) GetAccessToken(code string) (string, error) {
 	return token, nil
 }
 
-func (cda *CustomDeezerApi) GetUserHistory(userId string, accessToken string, redisClient *redis.Client, ctx context.Context) (models.BasicWrapHistory, error) {
+func (cda *CustomDeezerApi) GetUserHistory(userId string, accessToken string, database *Database) (models.BasicWrapHistory, error) {
 	historyUrl := "https://api.deezer.com/user/" + userId + "/history?"
 	values := url.Values{}
 	values.Set("access_token", accessToken)
 	var historyResult models.BasicWrapHistory
-	resultData, err := GetPageContentCached(historyUrl+values.Encode(), redisClient, ctx, 30*time.Second)
+	resultData, err := GetPageContentCached(historyUrl+values.Encode(), database, 30*time.Second)
 	if err != nil {
 		return historyResult, err
 	}

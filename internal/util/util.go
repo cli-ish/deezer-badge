@@ -1,11 +1,8 @@
 package util
 
 import (
-	"context"
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
-	"github.com/redis/go-redis/v9"
 	"io"
 	"net/http"
 	"time"
@@ -36,32 +33,23 @@ func GetPageContent(url string) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func GetPageContentCached(url string, rdb *redis.Client, ctx context.Context, cacheLength time.Duration) ([]byte, error) {
+func GetPageContentCached(url string, database *Database, cacheLength time.Duration) ([]byte, error) {
 	var data []byte
-	key := "url:" + url
-	exist, err := rdb.Exists(ctx, key).Result()
-	if err != nil {
-		return []byte{}, err
-	}
-	if exist == 0 {
+	exist, err := database.ExistInUrlCache(url)
+	if !exist {
 		data, err = GetPageContent(url)
 		if err != nil {
 			return []byte{}, err
 		}
-		_, err = rdb.Set(ctx, key, base64.StdEncoding.EncodeToString(data), cacheLength).Result()
+		err = database.SetUrlCache(url, data, cacheLength)
 		if err != nil {
 			return []byte{}, err
 		}
 	} else {
-		base64data, err := rdb.Get(ctx, key).Result()
-		if err != nil {
-			return []byte{}, err
-		}
-		data, err = base64.StdEncoding.DecodeString(base64data)
+		data, err = database.GetUrlCache(url)
 		if err != nil {
 			return []byte{}, err
 		}
 	}
-
 	return data, nil
 }
