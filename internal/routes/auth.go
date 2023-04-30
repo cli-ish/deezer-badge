@@ -119,10 +119,12 @@ func (bs *BadgeServer) getAuth(w http.ResponseWriter, r *http.Request) {
 		tmpl := template.Must(template.ParseFS(badgeTemplate, "templates/auth_result.gohtml", "templates/head.gohtml", "templates/footer.gohtml"))
 		w.Header().Set("Content-Type", "text/html")
 		err = tmpl.Execute(w, struct {
-			Title string
-		}{"Your badge is ready!"})
+			Title    string
+			BadgeUrl string
+		}{Title: "Your badge is ready!", BadgeUrl: "./badge/" + uidStr})
 		if err != nil {
 			http.Error(w, "unable to template index", 500)
+			return
 		}
 		return
 	} else {
