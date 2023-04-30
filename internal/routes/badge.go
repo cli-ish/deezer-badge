@@ -2,13 +2,11 @@ package routes
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/cli-ish/deezer-badge/internal/models"
 	"github.com/cli-ish/deezer-badge/internal/util"
 	"html/template"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -35,18 +33,7 @@ func (bs *BadgeServer) getBadge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	historyUrl := "https://api.deezer.com/user/" + fmt.Sprint(userId) + "/history?"
-	values := url.Values{}
-	values.Set("access_token", accessToken)
-
-	resultData, err := util.GetPageContentCached(historyUrl+values.Encode(), bs.RedisClient, bs.ctx, 30*time.Second)
-	if err != nil {
-		http.Error(w, "could not be requested", 500)
-		return
-	}
-
-	var historyResult models.BasicWrapHistory
-	err = json.Unmarshal(resultData, &historyResult)
+	historyResult, err := bs.DeezerApi.GetUserHistory(userId, accessToken, bs.RedisClient, bs.ctx)
 	if err != nil {
 		http.Error(w, "invalid history information response", 500)
 		return

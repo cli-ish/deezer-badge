@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"embed"
+	"github.com/cli-ish/deezer-badge/internal/util"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
@@ -21,22 +22,22 @@ var uidExp = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4
 
 type BadgeServer struct {
 	Port        string
-	AppId       string
-	AppSecret   string
-	ReturnUrl   string
 	RedisClient *redis.Client
 	ctx         context.Context
+	DeezerApi   util.CustomDeezerApi
 }
 
 func (bs *BadgeServer) Init() {
-	bs.AppId = os.Getenv("APP_ID")
-	bs.AppSecret = os.Getenv("APP_SECRET")
-	bs.ReturnUrl = os.Getenv("RETURN_URL")
 	bs.RedisClient = redis.NewClient(&redis.Options{
 		Addr:     os.Getenv("REDIS_HOST"),
 		Password: os.Getenv("REDIS_PASS"),
 		DB:       0,
 	})
+	bs.DeezerApi = util.CustomDeezerApi{
+		AppId:     os.Getenv("APP_ID"),
+		AppSecret: os.Getenv("APP_SECRET"),
+		ReturnUrl: os.Getenv("RETURN_URL"),
+	}
 	bs.Port = os.Getenv("HTTP_PORT")
 	bs.ctx = context.Background()
 }

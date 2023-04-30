@@ -1,15 +1,11 @@
 package routes
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/cli-ish/deezer-badge/internal/models"
 	"github.com/cli-ish/deezer-badge/internal/util"
 	"github.com/google/uuid"
 	"html/template"
-	"log"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -24,14 +20,9 @@ func (bs *BadgeServer) getAuth(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "redis down", 500)
 			return
 		}
-		values := url.Values{}
-		values.Set("app_id", bs.AppId)
-		values.Set("redirect_uri", bs.ReturnUrl)
-		values.Set("perms", "email,offline_access,listening_history")
-		values.Set("state", sessKey)
 		myCookie := &http.Cookie{Name: "session", Value: cookie, HttpOnly: true, Path: "/", Expires: time.Now().Add(lifetime)}
 		http.SetCookie(w, myCookie)
-		http.Redirect(w, r, "https://connect.deezer.com/oauth/auth.php?"+values.Encode(), 302)
+		http.Redirect(w, r, bs.DeezerApi.GenerateRedirectUrl(sessKey), 302)
 		return
 	}
 	if queryValues.Get("state") != "" {
@@ -53,49 +44,25 @@ func (bs *BadgeServer) getAuth(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "CSRF token does not match", 500)
 			return
 		}
-		tokenUrl := "https://connect.deezer.com/oauth/access_token.php?"
-		values := url.Values{}
-		values.Set("app_id", bs.AppId)
-		values.Set("secret", bs.AppSecret)
-		values.Set("code", queryValues.Get("code"))
-		bodyBytes, err := util.GetPageContent(tokenUrl + values.Encode())
+
+		token, err := bs.DeezerApi.GetAccessToken(queryValues.Get("code"))
 		if err != nil {
-			http.Error(w, "token fetching failed", 500)
-			return
-		}
-		responseQuery, err := url.ParseQuery(string(bodyBytes))
-		if err != nil {
-			http.Error(w, "result parser failed", 500)
-			return
-		}
-		token := responseQuery.Get("access_token")
-		if token == "" {
-			log.Println("invalid access token")
+			http.Error(w, "access token could not be loaded", 500)
 			return
 		}
 
-		meUrl := "https://api.deezer.com/user/me?"
-		values = url.Values{}
-		values.Set("access_token", token)
-		bodyBytes, err = util.GetPageContent(meUrl + values.Encode())
-		if err != nil {
-			http.Error(w, "me information fetching failed", 500)
-			return
-		}
-
-		data := models.BasicUserInfo{}
-		err = json.Unmarshal(bodyBytes, &data)
+		userData, err := bs.DeezerApi.GetMe(token)
 		if err != nil {
 			http.Error(w, "me information parsing error", 500)
 			return
 		}
 
-		err = bs.RedisClient.Set(bs.ctx, "user:"+fmt.Sprint(data.Id), token, 0).Err()
+		err = bs.RedisClient.Set(bs.ctx, "user:"+fmt.Sprint(userData.Id), token, 0).Err()
 		if err != nil {
 			http.Error(w, "redis down", 500)
 			return
 		}
-		userUidKey := "user:" + fmt.Sprint(data.Id) + ":uid"
+		userUidKey := "user:" + fmt.Sprint(userData.Id) + ":uid"
 		exist, err := bs.RedisClient.Exists(bs.ctx, userUidKey).Result()
 		if err != nil {
 			http.Error(w, "redis down", 500)
@@ -104,7 +71,7 @@ func (bs *BadgeServer) getAuth(w http.ResponseWriter, r *http.Request) {
 		uidStr := ""
 		if exist == 0 {
 			uidStr = uuid.NewString()
-			err = bs.RedisClient.MSet(bs.ctx, map[string]string{userUidKey: uidStr, "uid:" + uidStr: fmt.Sprint(data.Id)}).Err()
+			err = bs.RedisClient.MSet(bs.ctx, map[string]string{userUidKey: uidStr, "uid:" + uidStr: fmt.Sprint(userData.Id)}).Err()
 			if err != nil {
 				http.Error(w, "redis down", 500)
 				return
