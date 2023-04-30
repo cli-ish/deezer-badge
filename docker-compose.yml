@@ -7,6 +7,7 @@ services:
     env_file:
       - .env
     environment:
+      - HTTP_PORT=8080
       - REDIS_HOST=redis-storage:6379
       - REDIS_PASS=iev8vmki8ESh2herqQpeBikgS328lDafzjzv2is0hDC
     ports:

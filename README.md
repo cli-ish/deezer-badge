@@ -4,6 +4,14 @@ This golang Project allows you to create a badge to show off your great music ta
 
 ![Deezer Now Playing](https://incredible.software/test/badge/07371d90-f3ce-4352-b50a-93b55e3102e9)
 
+```markdown
+![Deezer Now Playing](https://example.com/badge/ffffffff-ffff-ffff-ffff-ffffffffffff)
+```
+
+```html
+<img src="https://example.com/badge/ffffffff-ffff-ffff-ffff-ffffffffffff" alt="Deezer Now Playing">
+```
+
 Be aware that this server stores your userId + an offline access token which does not expire.
 The access token also allows the server owner to query the /me endpoint end exfiltrate all data visible there.
 So pleas set up your own server or run one for your friends, don't use strangers server.
