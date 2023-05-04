@@ -56,7 +56,8 @@ func GetPageContentCached(url string, database *Database, cacheLength time.Durat
 }
 
 func GenerateColorCode(text string) string {
-	result := [3]byte{0, 0, 0}
+	colorBarrier := byte(66)
+	result := [3]byte{colorBarrier, colorBarrier, colorBarrier}
 	textB := []byte(text)
 	textLen := len(textB)
 	for i := 0; i < textLen; i += 3 {
@@ -68,6 +69,15 @@ func GenerateColorCode(text string) string {
 			c2 = textB[i+2]
 		}
 		result = [3]byte{result[0] ^ c0, result[1] ^ c1, result[2] ^ c2}
+	}
+	if result[0] < colorBarrier {
+		result[0] += colorBarrier
+	}
+	if result[1] < colorBarrier {
+		result[1] += colorBarrier
+	}
+	if result[2] < colorBarrier {
+		result[2] += colorBarrier
 	}
 	return fmt.Sprintf("%x", result)
 }
