@@ -15,6 +15,7 @@ type BasicHistoryInfo struct {
 	Artist       BasicArtistInfo `json:"artist"`
 	Album        BasicAlbumInfo  `json:"album"`
 	BasicImage   string
+	BarColor     string
 }
 
 type BasicWrapHistory struct {

@@ -44,6 +44,9 @@ func (bs *BadgeServer) getBadge(w http.ResponseWriter, r *http.Request) {
 		}
 		lastPlayedTrack.BasicImage = base64.StdEncoding.EncodeToString(data)
 	}
+	// Todo: wip! check if some color ranges should be excluded.
+	lastPlayedTrack.BarColor = "#" + util.GenerateColorCode(lastPlayedTrack.Artist.Name+lastPlayedTrack.Title)
+
 	tmpl := template.Must(template.ParseFS(badgeTemplate, "templates/badge.gohtml"))
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.Header().Set("Cache-Control", "no-cache")

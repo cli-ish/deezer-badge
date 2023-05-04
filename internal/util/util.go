@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -52,4 +53,21 @@ func GetPageContentCached(url string, database *Database, cacheLength time.Durat
 		}
 	}
 	return data, nil
+}
+
+func GenerateColorCode(text string) string {
+	result := [3]byte{0, 0, 0}
+	textB := []byte(text)
+	textLen := len(textB)
+	for i := 0; i < textLen; i += 3 {
+		c0, c1, c2 := textB[i], byte(0), byte(0)
+		if i+1 < textLen {
+			c1 = textB[i+1]
+		}
+		if i+2 < textLen {
+			c2 = textB[i+2]
+		}
+		result = [3]byte{result[0] ^ c0, result[1] ^ c1, result[2] ^ c2}
+	}
+	return fmt.Sprintf("%x", result)
 }
