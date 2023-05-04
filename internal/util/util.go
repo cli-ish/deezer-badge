@@ -61,23 +61,24 @@ func GenerateColorCode(text string) string {
 	textB := []byte(text)
 	textLen := len(textB)
 	for i := 0; i < textLen; i += 3 {
-		c0, c1, c2 := textB[i], byte(0), byte(0)
+		c1, c2 := byte(0), byte(0)
 		if i+1 < textLen {
 			c1 = textB[i+1]
 		}
 		if i+2 < textLen {
 			c2 = textB[i+2]
 		}
-		result = [3]byte{result[0] ^ c0, result[1] ^ c1, result[2] ^ c2}
+		result = [3]byte{result[0] ^ textB[i], result[1] ^ c1, result[2] ^ c2}
 	}
-	if result[0] < colorBarrier {
-		result[0] += colorBarrier
+	limit := int(colorBarrier) * 4
+	if int(result[0])+int(result[1])+int(result[2]) < limit {
+		result[0] += colorBarrier * 2
 	}
-	if result[1] < colorBarrier {
-		result[1] += colorBarrier
+	if int(result[0])+int(result[1])+int(result[2]) < limit {
+		result[1] += colorBarrier * 2
 	}
-	if result[2] < colorBarrier {
-		result[2] += colorBarrier
+	if int(result[0])+int(result[1])+int(result[2]) < limit {
+		result[2] += colorBarrier * 2
 	}
 	return fmt.Sprintf("%x", result)
 }
